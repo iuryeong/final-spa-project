@@ -7,6 +7,7 @@ const store = useMovieStore();
 // 컴포넌트가 마운트되면 영화 데이터 불러오기
 onMounted(() => {
   store.fetchMovies();
+  document.title = '🎬 국내 극장 화제작(인기순)';
 });
 </script>
 
@@ -60,6 +61,11 @@ onMounted(() => {
             {{ movie.isFavorite ? '❤️ 찜 해제' : '♡ 찜하기' }}
           </button>
         </div>
+        <RouterLink
+          :to="`/movies/${movie.id}`"
+          class="stretched-link"
+          :aria-label="`${movie.title} 상세 정보 보기`"
+          ></RouterLink>
       </div>
     </div>
   </main>
@@ -108,15 +114,16 @@ onMounted(() => {
   gap: 30px; 
 }
 
-.movie-card { 
-  border-radius: 12px; 
-  overflow: hidden; 
-  background: white; 
-  text-align: left; 
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-  transition: transform 0.2s ease; 
-  display: flex; 
-  flex-direction: column; 
+.movie-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  text-align: left;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .movie-card:hover { 
@@ -166,18 +173,31 @@ onMounted(() => {
 }
 
 .fav-btn {
-  padding: 8px 14px;
-  border: 2px solid #e74c3c;
-  background: white;
-  color: #e74c3c;
-  border-radius: 8px;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 12px;
   cursor: pointer;
+  border: none;
+  background: #ecf0f1;
+  color: #333;
+  font-weight: bold;
   font-size: 14px;
-  transition: all 0.2s ease;
+  transition: 0.3s;
+  margin-top: auto;
 }
 
 .fav-btn.active {
   background-color: #e74c3c;
   color: white;
+}
+
+.stretched-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
 }
 </style>
