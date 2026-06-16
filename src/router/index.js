@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import MoviesView from '../views/MoviesView.vue';
 import MovieDetailView from '../views/MovieDetailView.vue';
+import NotFoundView from '../views/NotFoundView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,6 +21,11 @@ const router = createRouter({
       path: '/movies/:id', // (localhost:5173/movies/1234)
       name: 'movie-detail',
       component: MovieDetailView // 이 주소로 오면 MovieDetailView 컴포넌트를 띄워라!
+    },
+    {
+      path: '/:pathMatch(.*)*', // 위에 정의된 주소 외의 모든 주소
+      name: 'not-found',
+      component: NotFoundView // 이 주소로 오면 NotFoundView 컴포넌트를 띄워라!
     }
   ]
 });
