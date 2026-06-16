@@ -12,20 +12,6 @@ const router = useRouter()
   </div>
 </template>
 
-<script setup>
-import { useRouter } from 'vue-router'
-const router = useRouter()
-</script>
-
-<template>
-  <div class="error-page">
-    <h1>404</h1>
-    <h2>페이지를 찾을 수 없습니다.</h2>
-    <p>입력하신 주소가 잘못되었거나, 영화 정보가 삭제되었습니다.</p>
-    <button @click="router.push('/')" class="home-btn">메인으로 돌아가기</button>
-  </div>
-</template>
-
 <style scoped>
 .error-page {
   text-align: center;
