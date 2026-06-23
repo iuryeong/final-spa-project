@@ -1,119 +1,170 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import axios from 'axios';
 
-const isLoading = ref(false);
-const errorMessage = ref('');
-
-const selectedMovie = ref(null);
-
 export const useMovieStore = defineStore('movie', () => {
-  // [1] State (상태 관리 구역)
-  const movies = ref([]);
+    const movies = ref([]);
 
-  // [세션 스토리지 적용]
-  const favorites = ref(JSON.parse(sessionStorage.getItem('favorites')) || []);
+    const favorites = ref(JSON.parse(sessionStorage.getItem('favorites')) || []);
 
-  // [2] UX 및 예외 처리를 위한 핵심 방어 상태 변수
-  const isLoading = ref(false);
-  const errorMessage = ref('');
+    const isLoading = ref(false);
+    const errorMessage = ref('');
 
-  // [3] Actions: 외부 서버 통신 함수 (async/await 적용)
-  const fetchMovies = async () => {
-    isLoading.value = true;
-    errorMessage.value = '';
+    const selectedMovie = ref(null);
 
-    try {
-      const API_KEY = '0c8cbd7cf72223744b1a976baa2ec959';
-      // 주의: 'release_date.gte'처럼 이름에 마침표(.)가 들어간 이름표는 반드시 따옴표로 감싸야 합니다.
-      const movieParams = {
-        api_key: API_KEY,
-        language: 'ko-KR',
-        region: 'KR',
-        sort_by: 'popularity.desc',
-        include_adult: false,
-        'release_date.gte': '2025-01-01',
-        with_release_type: '2|3',
-        page: 1
-      };
+    const sortType = ref('popularity');
 
-      const response = await axios.get('https://api.themoviedb.org/3/discover/movie', {
-        params: movieParams
-      });
+    // [추가 미션 2: 검색 기능]
+    const searchQuery = ref('');
 
-      const fetchedMovies = response.data.results;
+    // [추가 미션 4: 페이지네이션]
+    const currentPage = ref(1);
+    const itemsPerPage = 6;
 
-      // [세션 스토리지 상태 동기화]
-      fetchedMovies.forEach(movie => {
-        const isAlreadyFavorite = favorites.value.some(fav => fav.id === movie.id);
-        movie.isFavorite = isAlreadyFavorite;
-      });
+    const totalPages = computed(() =>
+        Math.ceil(movies.value.length / itemsPerPage)
+    );
 
-      movies.value = fetchedMovies;
-
-    } catch (error) {
-      console.error('API 통신 에러 상세 내용:', error);
-      errorMessage.value = '영화 데이터를 불러오는 데 실패했습니다. 통신 상태나 API Key를 확인해 주세요.';
-    } finally {
-      isLoading.value = false;
-    }
-  };
-
-  // [12주차 추가] 특정 영화 단일 상세 정보 API 호출 함수
-const fetchMovieDetail = async (movieId) => {
-  isLoading.value = true;
-  errorMessage.value = '';
-  selectedMovie.value = null;
-
-  try {
-    const API_KEY = '0c8cbd7cf72223744b1a976baa2ec959';
-    const url = `https://api.themoviedb.org/3/movie/${movieId}`;
-
-    const response = await axios.get(url, {
-      params: {
-        api_key: API_KEY,
-        language: 'ko-KR'
-      }
+    const paginatedMovies = computed(() => {
+        const start = (currentPage.value - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        return movies.value.slice(start, end);
     });
 
-    selectedMovie.value = response.data;
-  } catch (error) {
-      if (error.response && error.response.status === 404) {
-        errorMessage.value = '존재하지 않거나 삭제된 영화 정보입니다.';
-      } else {
-        errorMessage.value = '서버 통신 중 에러가 발생했습니다.';
-      }
-    } finally {
-      isLoading.value = false;
+    const setPage = (page) => {
+        currentPage.value = page;
+    };
+
+    const searchResults = computed(() => {
+        if (!searchQuery.value.trim()) return movies.value;
+        const query = searchQuery.value.trim().toLowerCase();
+        return movies.value.filter(movie =>
+            movie.title.toLowerCase().includes(query)
+        );
+    });
+
+    const fetchMovies = async () => {
+        isLoading.value = true;
+        errorMessage.value = '';
+
+        try{
+            const API_KEY = '0c8cbd7cf72223744b1a976baa2ec959';
+
+            const movieParams = {
+                api_key: API_KEY,
+                language: 'ko-KR',
+                region: 'KR',
+                sort_by: 'popularity.desc',
+                include_adult: false,
+                'release_date.gte': '2025-01-01',
+                with_release_type: '2|3',
+                page: 1
+            };
+
+            const response = await axios.get('https://api.themoviedb.org/3/discover/movie', {
+                params: movieParams
+            });
+
+            const fetchedMovies = response.data.results;
+            
+            fetchedMovies.forEach(movie => {
+                const isAlreadyFavorite = favorites.value.some(fav => fav.id === movie.id);
+                movie.isFavorite = isAlreadyFavorite;
+            });
+            movies.value = fetchedMovies;
+        } catch (error) {
+            console.error('API 통신 에러 상세 내역:', error);
+            errorMessage.value = '영화 데이터를 불러오는 데 실패했습니다. 통신 상태나 API Key를 확인해 주세요.'
+        } finally {
+            isLoading.value = false;
+        }
+    };
+
+    const fetchMovieDetail = async (movieId) => {
+        isLoading.value = true;
+        errorMessage.value = '';
+        selectedMovie.value = null;
+
+        try {
+            const API_KEY = '0c8cbd7cf72223744b1a976baa2ec959';
+            const url = `https://api.themoviedb.org/3/movie/${movieId}`;
+
+            const response = await axios.get(url, {
+                params: {
+                    api_key: API_KEY,
+                    language: 'ko-KR'
+                }
+            });
+            
+            selectedMovie.value = response.data;
+        } catch (error) {
+            if (error.response && error.response.status === 404) {
+                errorMessage.value = '존재하지 않거나 삭제된 영화 정보입니다.';
+            } else {
+                errorMessage.value = '서버 통신 중 에러가 발생했습니다.';
+            }
+        } finally {
+            isLoading.value = false;
+        }
+    };
+
+    const toggleFavorite = (movieId) => {
+        const movie = movies.value.find(m => m.id === movieId);
+        if (movie) {
+            movie.isFavorite = !movie.isFavorite;
+
+            if(movie.isFavorite) {
+                favorites.value.push(movie);
+            } else {
+                favorites.value = favorites.value.filter(m => m.id !== movieId);
+            }
+            sessionStorage.setItem('favorites', JSON.stringify(favorites.value));
+        }
+    };
+
+    // [추가 미션 1: 정렬 기능]
+    const sortMovies = (type) => {
+        sortType.value = type;
+        
+       
+        const sortedMovies = [...movies.value];
+        
+        if (type === 'title') {
+            sortedMovies.sort((a, b) => 
+                a.title.localeCompare(b.title, 'ko-KR')
+            );
+        } else if (type === 'release_date') {
+            sortedMovies.sort((a, b) => {
+                const dateA = new Date(a.release_date || '0000-00-00').getTime();
+                const dateB = new Date(b.release_date || '0000-00-00').getTime();
+                return dateB - dateA; 
+            });
+        } else if (type === 'vote_average') {
+            sortedMovies.sort((a, b) => 
+                b.vote_average - a.vote_average
+            );
+        }
+        
+        movies.value = sortedMovies;
+        currentPage.value = 1;
+    };
+
+    return {
+        movies,
+        favorites,
+        isLoading,
+        errorMessage,
+        fetchMovies,
+        toggleFavorite,
+        selectedMovie,
+        fetchMovieDetail,
+        sortType,
+        sortMovies,
+        searchQuery,
+        searchResults,
+        currentPage,
+        totalPages,
+        paginatedMovies,
+        setPage
     }
-  };
-
-  // [찜하기 토글 및 세션 스토리지 변경 로직]
-  const toggleFavorite = (movieId) => {
-    const movie = movies.value.find(m => m.id === movieId);
-    if (movie) {
-      movie.isFavorite = !movie.isFavorite;
-
-      // 하트 활성화 시 찜 목록 배열에 현재 영화 객체를 추가합니다.
-      if (movie.isFavorite) {
-        favorites.value.push(movie);
-      } else {
-        // 하트 해제 시 찜 배열에서 해당 영화를 제외(filter)시킵니다.
-        favorites.value = favorites.value.filter(m => m.id !== movieId);
-      }
-      sessionStorage.setItem('favorites', JSON.stringify(favorites.value));
-    }
-  };
-
-  // [4] 컴포넌트가 사용할 수 있도록 상태와 함수들을 반환합니다.
-  return {
-    movies,
-    favorites,
-    isLoading,
-    errorMessage,
-    fetchMovies,
-    toggleFavorite,
-    selectedMovie,
-    fetchMovieDetail
-  };
 });

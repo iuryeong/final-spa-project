@@ -9,6 +9,11 @@ onMounted(() => {
   store.fetchMovies();
   document.title = '🎬 국내 극장 화제작(인기순)';
 });
+
+// [추가 미션 1: 정렬 기능] 정렬 버튼 클릭 핸들러
+const handleSort = (sortType) => {
+  store.sortMovies(sortType);
+};
 </script>
 
 <template>
@@ -16,6 +21,31 @@ onMounted(() => {
     <div class="header-section">
       <h1>🍿 국내 극장 화제작 (인기순)</h1>
       <p class="sub-title">2025년 이후 국내 정식 개봉한 실시간 인기 상영작</p>
+    </div>
+
+    <!-- [추가 미션 1: 정렬 기능] 정렬 버튼 그룹 -->
+    <div class="sort-controls">
+      <button 
+        class="sort-btn" 
+        :class="{ active: store.sortType === 'title' }"
+        @click="handleSort('title')"
+      >
+        제목순
+      </button>
+      <button 
+        class="sort-btn" 
+        :class="{ active: store.sortType === 'release_date' }"
+        @click="handleSort('release_date')"
+      >
+        개봉일순
+      </button>
+      <button 
+        class="sort-btn" 
+        :class="{ active: store.sortType === 'vote_average' }"
+        @click="handleSort('vote_average')"
+      >
+        평점순
+      </button>
     </div>
 
     <!-- 로딩 중 -->
@@ -30,7 +60,7 @@ onMounted(() => {
 
     <!-- 영화 목록 -->
     <div v-else class="movie-list">
-      <div v-for="movie in store.movies" :key="movie.id" class="movie-card">
+      <div v-for="movie in store.paginatedMovies" :key="movie.id" class="movie-card">
         <img
           v-if="movie.poster_path"
           :src="`https://image.tmdb.org/t/p/w500${movie.poster_path}`"
@@ -68,6 +98,19 @@ onMounted(() => {
           ></RouterLink>
       </div>
     </div>
+
+    <!-- [추가 미션 4: 페이지네이션] 하단 페이지 번호 버튼 -->
+    <div v-if="!store.isLoading && !store.errorMessage" class="pagination">
+      <button
+        v-for="page in store.totalPages"
+        :key="page"
+        class="page-btn"
+        :class="{ active: store.currentPage === page }"
+        @click="store.setPage(page)"
+      >
+        {{ page }}
+      </button>
+    </div>
   </main>
 </template>
 
@@ -88,6 +131,38 @@ onMounted(() => {
   font-size: 14px; 
   color: #7f8c8d; 
   margin-top: 5px; 
+}
+
+/* [추가 미션 1: 정렬 기능] 정렬 버튼 스타일 */
+.sort-controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.sort-btn {
+  padding: 10px 20px;
+  border: 2px solid #3498db;
+  background-color: white;
+  color: #3498db;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sort-btn:hover {
+  background-color: #e3f2fd;
+  transform: translateY(-2px);
+}
+
+.sort-btn.active {
+  background-color: #3498db;
+  color: white;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
 }
 
 .status-message { 
@@ -199,5 +274,36 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   z-index: 1;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+
+.page-btn {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #3498db;
+  background-color: white;
+  color: #3498db;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-btn:hover {
+  background-color: #e3f2fd;
+}
+
+.page-btn.active {
+  background-color: #3498db;
+  color: white;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
 }
 </style>

@@ -1,10 +1,10 @@
 <script setup>
 import { computed } from 'vue';
-import { RouterLink, RouterView } from 'vue-router';
-// 전역 비동기 세션 데이터가 들어있는 스토어를 임포트합니다.
+import { RouterLink, RouterView, useRouter } from 'vue-router';
 import { useMovieStore } from './stores/movieStore';
 
 const store = useMovieStore();
+const router = useRouter();
 
 // [반응형 연산 1] 세션 스토리지 기반 실시간 찜 개수를 계산합니다.
 const totalFavoritesCount = computed(() => {
@@ -13,18 +13,20 @@ const totalFavoritesCount = computed(() => {
 
 // [반응형 연산 2] TMDB vote_average 스펙에 맞춘 평균 평점 실시간 계산 로직입니다.
 const averageFavoritesRating = computed(() => {
-  // 빈 찜 목록이 비어있을 때 NaN 에러를 뱉지 않도록 0.0을 안전하게 반환합니다.
   if (store.favorites.length === 0) {
     return '0.0';
   }
-  // .reduce()를 활용하여 찜한 영화들의 평점 총합을 누적 계산합니다.
   const totalRatingSum = store.favorites.reduce((accumulator, movie) => {
     return accumulator + movie.vote_average;
   }, 0);
-  // 총합을 총 개수로 나누고 소수점 첫째 자리까지 포맷팅합니다.
   const calculatedAverage = totalRatingSum / store.favorites.length;
   return calculatedAverage.toFixed(1);
 });
+
+// [추가 미션 2: 검색 기능] 검색창 Enter 입력 시 결과 페이지로 이동
+const handleSearch = () => {
+  router.push({ name: 'search' });
+};
 </script>
 
 <template>
@@ -39,7 +41,23 @@ const averageFavoritesRating = computed(() => {
         <nav class="nav-menu">
           <RouterLink to="/" class="nav-item">홈</RouterLink>
           <RouterLink to="/movies" class="nav-item">영화 목록</RouterLink>
+          <RouterLink to="/favorites" class="nav-item nav-favorites">
+            ❤️ 찜 목록
+            <span v-if="totalFavoritesCount > 0" class="fav-badge">{{ totalFavoritesCount }}</span>
+          </RouterLink>
         </nav>
+
+        <!-- [추가 미션 2: 검색 기능] 검색창 -->
+        <div class="search-box">
+          <input
+            v-model="store.searchQuery"
+            @keyup.enter="handleSearch"
+            type="text"
+            class="search-input"
+            placeholder="영화 제목 검색..."
+          />
+          <button @click="handleSearch" class="search-btn">🔍</button>
+        </div>
 
         <div class="header-dashboard">
           <!-- 찜한 작품 개수 -->
@@ -110,9 +128,29 @@ const averageFavoritesRating = computed(() => {
   -webkit-text-fill-color: transparent; 
 }
 
-.nav-menu { 
-  display: flex; 
-  gap: 30px; 
+.nav-menu {
+  display: flex;
+  gap: 30px;
+}
+
+.nav-favorites {
+  position: relative;
+}
+
+.fav-badge {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background-color: #e74c3c;
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-item { 
@@ -135,9 +173,46 @@ const averageFavoritesRating = computed(() => {
   background-color: rgba(255, 87, 87, 0.1); 
 }
 
-.header-dashboard { 
-  display: flex; 
-  gap: 15px; 
+.search-box {
+  display: flex;
+  align-items: center;
+  background-color: #2f3542;
+  border: 1px solid #3f4656;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 14px;
+  padding: 8px 12px;
+  width: 200px;
+}
+
+.search-input::placeholder {
+  color: #a4b0be;
+}
+
+.search-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 16px;
+  color: #a4b0be;
+  transition: color 0.2s;
+}
+
+.search-btn:hover {
+  color: #ffffff;
+}
+
+.header-dashboard {
+  display: flex;
+  gap: 15px;
 }
 
 .dashboard-badge { 

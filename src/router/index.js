@@ -2,30 +2,42 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import MoviesView from '../views/MoviesView.vue';
 import MovieDetailView from '../views/MovieDetailView.vue';
+import SearchResultView from '../views/SearchResultView.vue';
+import FavoritesView from '../views/FavoritesView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/', // 기본 주소 (localhost:5173/)
+      path: '/',
       name: 'home',
-      component: HomeView // 이 주소로 오면 HomeView 컴포넌트를 띄워라!
+      component: HomeView
     },
     {
-      path: '/movies', // (localhost:5173/movies)
+      path: '/movies',
       name: 'movies',
-      component: MoviesView // 이 주소로 오면 MoviesView 컴포넌트를 띄워라!
+      component: MoviesView
     },
     {
-      path: '/movies/:id', // (localhost:5173/movies/1234)
+      path: '/movies/:id',
       name: 'movie-detail',
-      component: MovieDetailView // 이 주소로 오면 MovieDetailView 컴포넌트를 띄워라!
+      component: MovieDetailView
     },
     {
-      path: '/:pathMatch(.*)*', // 위에 정의된 주소 외의 모든 주소
+      path: '/search',
+      name: 'search',
+      component: SearchResultView
+    },
+    {
+      path: '/favorites',
+      name: 'favorites',
+      component: FavoritesView
+    },
+    {
+      path: '/:pathMatch(.*)*',
       name: 'not-found',
-      component: NotFoundView // 이 주소로 오면 NotFoundView 컴포넌트를 띄워라!
+      component: NotFoundView
     }
   ]
 });
